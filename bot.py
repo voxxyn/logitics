@@ -12,12 +12,10 @@ BOT_TOKEN = os.getenv("BOT_TOKEN", "")
 ADMIN_GROUP_ID = os.getenv("ADMIN_GROUP_ID", "")
 ADMIN_IDS = [int(x) for x in os.getenv("ADMIN_IDS", "").split(",") if x.strip()]
 APPLICATIONS_FILE = "applications.json"
-
 LANGUAGE, TRUCK_NUMBER, DRIVER_NAME, COUNTRY, CITY, RELEASE_DATE, CONFIRM = range(7)
 
 TEXTS = {
     "ru": {
-        "welcome": "👋 Добро пожаловать!\nВыберите язык:",
         "ask_truck": "🚛 Введите номер фуры:",
         "ask_driver": "👤 Введите ваше имя (ФИО):",
         "ask_country": "🌍 В какой стране вы находитесь?",
@@ -36,23 +34,22 @@ TEXTS = {
         "date_label": "Дата освобождения",
     },
     "uz": {
-        "welcome": "👋 Xush kelibsiz!\nTilni tanlang:",
-        "ask_truck": "🚛 Yuk mashinasi raqamini kiriting:",
-        "ask_driver": "👤 Ismingizni kiriting (FIO):",
-        "ask_country": "🌍 Qaysi mamlakatdasiz?",
-        "ask_city": "🏙 Qaysi shaharda?",
-        "ask_date": "📅 Mashina qachon bo'shaydi?\nFormat: KK.OO.YYYY (masalan: 25.06.2025)",
-        "confirm_title": "📋 Ma'lumotlarni tekshiring:",
-        "confirm_btn": "✅ Tasdiqlash",
-        "cancel_btn": "❌ Bekor qilish",
-        "success": "✅ Ariza qabul qilindi! Dispetcherlar yuk tayyorlayapti. Rahmat!",
-        "cancelled": "❌ Bekor qilindi. Qaytadan — /start",
-        "invalid_date": "❌ Format noto'g'ri. KK.OO.YYYY kiriting",
-        "truck_label": "Yuk mashinasi",
-        "driver_label": "Haydovchi",
-        "country_label": "Mamlakat",
-        "city_label": "Shahar",
-        "date_label": "Bo'shash sanasi",
+        "ask_truck": "🚛 Юк машинаси рақамини киринг:",
+        "ask_driver": "👤 Исмингизни киринг (ФИО):",
+        "ask_country": "🌍 Қайси мамлакатдасиз?",
+        "ask_city": "🏙 Қайси шаҳарда?",
+        "ask_date": "📅 Машина қачон бўшайди?\nФормат: КК.ОО.ЙЙЙЙ (масалан: 25.06.2025)",
+        "confirm_title": "📋 Маълумотларни текширинг:",
+        "confirm_btn": "✅ Тасдиқлаш",
+        "cancel_btn": "❌ Бекор қилиш",
+        "success": "✅ Ариза қабул қилинди! Диспетчерлар юк тайёрлаяпти. Раҳмат!",
+        "cancelled": "❌ Бекор қилинди. Қайтадан — /start",
+        "invalid_date": "❌ Формат нотўғри. КК.ОО.ЙЙЙЙ киринг",
+        "truck_label": "Юк машинаси",
+        "driver_label": "Ҳайдовчи",
+        "country_label": "Мамлакат",
+        "city_label": "Шаҳар",
+        "date_label": "Бўшаш санаси",
     }
 }
 
@@ -70,13 +67,17 @@ def save_application(data):
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data.clear()
-    keyboard = [["🇷🇺 Русский", "🇺🇿 O'zbekcha"]]
-    await update.message.reply_text("👋 Добро пожаловать! / Xush kelibsiz!\nВыберите язык / Tilni tanlang:", reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True, one_time_keyboard=True))
+    keyboard = [["🇷🇺 Русский", "🇺🇿 Ўзбекча"]]
+    await update.message.reply_text(
+        "👋 Добро пожаловать! / Хуш келибсиз!\nВыберите язык / Тилни танланг:",
+        reply_markup=ReplyKeyboardMarkup(keyboard, resize_keyboard=True, one_time_keyboard=True)
+    )
     return LANGUAGE
 
 async def set_language(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    context.user_data["lang"] = "uz" if "O'zbekcha" in update.message.text else "ru"
-    await update.message.reply_text(TEXTS[context.user_data["lang"]]["ask_truck"], reply_markup=ReplyKeyboardRemove())
+    context.user_data["lang"] = "uz" if "Ўзбекча" in update.message.text else "ru"
+    lang = context.user_data["lang"]
+    await update.message.reply_text(TEXTS[lang]["ask_truck"], reply_markup=ReplyKeyboardRemove())
     return TRUCK_NUMBER
 
 async def get_truck_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -124,13 +125,22 @@ async def confirm_application(update: Update, context: ContextTypes.DEFAULT_TYPE
         await query.edit_message_text(t["cancelled"])
         return ConversationHandler.END
     now = datetime.now().strftime("%d.%m.%Y %H:%M")
-    app_data = {"id": len(load_applications()) + 1, "truck_number": context.user_data["truck_number"], "driver_name": context.user_data["driver_name"], "country": context.user_data["country"], "city": context.user_data["city"], "release_date": context.user_data["release_date"], "submitted_at": now, "telegram_username": query.from_user.username or ""}
+    app_data = {
+        "id": len(load_applications()) + 1,
+        "truck_number": context.user_data["truck_number"],
+        "driver_name": context.user_data["driver_name"],
+        "country": context.user_data["country"],
+        "city": context.user_data["city"],
+        "release_date": context.user_data["release_date"],
+        "submitted_at": now,
+        "telegram_username": query.from_user.username or ""
+    }
     save_application(app_data)
-    msg = f"🆕 НОВАЯ ЗАЯВКА #{app_data['id']}\n{'─'*28}\n🚛 Фура: {app_data['truck_number']}\n👤 Водитель: {app_data['driver_name']}\n🌍 Страна: {app_data['country']}\n🏙 Город: {app_data['city']}\n📅 Освобождение: {app_data['release_date']}\n⏰ Время: {app_data['submitted_at']}\n📱 TG: @{app_data['telegram_username']}"
+    msg = f"🆕 ЯНГИ ЗАЯВКА / НОВАЯ ЗАЯВКА #{app_data['id']}\n{'─'*28}\n🚛 Фура: {app_data['truck_number']}\n👤 Ҳайдовчи/Водитель: {app_data['driver_name']}\n🌍 Мамлакат/Страна: {app_data['country']}\n🏙 Шаҳар/Город: {app_data['city']}\n📅 Бўшаш/Освобождение: {app_data['release_date']}\n⏰ Вақт/Время: {app_data['submitted_at']}\n📱 TG: @{app_data['telegram_username']}"
     try:
         await context.bot.send_message(chat_id=ADMIN_GROUP_ID, text=msg)
     except Exception as e:
-        logger.error(f"Ошибка отправки в группу: {e}")
+        logger.error(f"Ошибка: {e}")
     await query.edit_message_text(t["success"])
     return ConversationHandler.END
 
