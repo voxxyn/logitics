@@ -8,8 +8,8 @@ from telegram.ext import Application, CommandHandler, MessageHandler, Conversati
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-BOT_TOKEN = os.getenv("8805232719:AAEEjPQzLnAUSh8EhLtrjUFVq-QN6n83peo", "")
-ADMIN_GROUP_ID = os.getenv("-1003955990003", "")
+BOT_TOKEN = os.getenv("BOT_TOKEN", "8805232719:AAEEjPQzLnAUSh8EhLtrjUFVq-QN6n83peo")
+ADMIN_GROUP_ID = os.getenv("ADMIN_GROUP_ID", "-1003955990003")
 ADMIN_IDS = [int(x) for x in os.getenv("ADMIN_IDS", "").split(",") if x.strip()]
 APPLICATIONS_FILE = "applications.json"
 
